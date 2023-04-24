@@ -1,8 +1,0 @@
-{
-  "database": {
-    "name": "ECEN403",
-    "user": "ECEN403",
-    "password": "ECEN4032023",
-    "host": "ecen403-database.crijzo32qccc.us-east-2.rds.amazonaws.com"
-  }
-}
