@@ -142,43 +142,83 @@ async def get_medications(medication_id: str):
 ########################################################################################################################
 
 @app.get('/schedules', response_class=JSONResponse)
-async def get_user_schedules(user_id: str):
-    try:
-        result = db.execute(f'''SELECT schedules_id,
-                                        medications.medications_id,
-                                        medications.medications_generic_name,
-                                        medications.medications_brand_name,
-                                        schedules_begin_date,
-                                        schedules_end_date,
-                                        schedules_frequency,
-                                        schedules_time
-                                    FROM schedules
-                                    LEFT JOIN medications 
-                                        ON medications.medications_id = schedules.schedules_medication_id
-                                    WHERE schedules_user_id = {user_id};''')
+async def get_user_schedules(user_id: str, schedule_id: str):
+    if schedule_id == 'all':
+        try:
+            result = db.execute(f'''SELECT schedules_id,
+                                            medications.medications_id,
+                                            medications.medications_generic_name,
+                                            medications.medications_brand_names,
+                                            schedules_begin_date,
+                                            schedules_end_date,
+                                            schedules_frequency,
+                                            schedules_time
+                                        FROM schedules
+                                        LEFT JOIN medications 
+                                            ON medications.medications_id = schedules.schedules_medication_id
+                                        WHERE schedules_user_id = {user_id};''')
 
-        schedules = list()
+            schedules = list()
 
-        for row in result:
-            schedules.append(dict(zip(['schedule_id',
-                                       'user_id'
-                                       'medication_id',
-                                       'medication_generic_name',
-                                       'medication_brand_name',
-                                       'schedule_begin_date',
-                                       'schedule_end_date',
-                                       'schedule_frequency',
-                                       'schedule_time'], row)))
+            for row in result:
+                schedules.append(dict(zip(['schedule_id',
+                                        'user_id'
+                                        'medication_id',
+                                        'medication_generic_name',
+                                        'medication_brand_name',
+                                        'schedule_begin_date',
+                                        'schedule_end_date',
+                                        'schedule_frequency',
+                                        'schedule_time'], row)))
 
-        if len(schedules) == 0:
-            raise MIAException(MIASystem.API,
-                               MIASeverity.WARNING,
-                               'Query did not return any results')
-        else:
-            return {'schedules': schedules}
+            if len(schedules) == 0:
+                raise MIAException(MIASystem.API,
+                                MIASeverity.WARNING,
+                                'Query did not return any results')
+            else:
+                return {'schedules': schedules}
 
-    except MIAException as error:
-        return RedirectResponse(f'/errors?error_message={error}')
+        except MIAException as error:
+            return RedirectResponse(f'/errors?error_message={error}')
+    
+    else:
+        try:
+            result = db.execute(f'''SELECT schedules_id,
+                                            medications.medications_id,
+                                            medications.medications_generic_name,
+                                            medications.medications_brand_names,
+                                            schedules_begin_date,
+                                            schedules_end_date,
+                                            schedules_frequency,
+                                            schedules_time
+                                        FROM schedules
+                                        LEFT JOIN medications 
+                                            ON medications.medications_id = schedules.schedules_medication_id
+                                        WHERE schedules_user_id = {user_id} AND
+                                        schedules_id = {schedule_id};''')
+
+            schedules = list()
+
+            for row in result:
+                schedules.append(dict(zip(['schedule_id',
+                                        'user_id'
+                                        'medication_id',
+                                        'medication_generic_name',
+                                        'medication_brand_name',
+                                        'schedule_begin_date',
+                                        'schedule_end_date',
+                                        'schedule_frequency',
+                                        'schedule_time'], row)))
+
+            if len(schedules) == 0:
+                raise MIAException(MIASystem.API,
+                                MIASeverity.WARNING,
+                                'Query did not return any results')
+            else:
+                return {'schedules': schedules}
+
+        except MIAException as error:
+            return RedirectResponse(f'/errors?error_message={error}')
 
 @app.post('/schedules', response_class=JSONResponse)
 async def create_schedule(schedule_user_id: str,
