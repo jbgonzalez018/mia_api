@@ -249,3 +249,14 @@ async def create_schedule(schedule_user_id: str,
 
     except MIAException as error:
         return RedirectResponse(f'/errors?error_message={error}')
+
+@app.delete('/schedules', response_class=JSONResponse)
+async def delete_schedule(schedule_id: str):
+    try:
+        db.execute(f'''DELETE FROM schedules
+                       WHERE schedules_id = '{schedule_id}';''')
+
+        return {'success': 'true'}
+
+    except MIAException as error:
+        RedirectResponse(f'/errors?error_message={error}')
