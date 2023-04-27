@@ -3,17 +3,11 @@ from fastapi.responses import RedirectResponse, JSONResponse
 
 from mia_database import *
 
-# TODO (today): Need to finish and test schedules endpoint
-# TODO (today): Need to finish and test users endpoint
-# TODO (today): Need to finish half of medications endpoint and test that half
-
-# TODO (tomorrow): Need to finish other half of medications endpoint and finish testing
-
 ########################################################################################################################
 # Application and Database Setup
 ########################################################################################################################
 
-# TODO: come back to this
+# TODO: cleanup
 
 try:
     db = MIADatabase('../res/configuration.json')
@@ -88,67 +82,65 @@ async def delete_user(user_login: str):
 ########################################################################################################################
 
 @app.get('/medications', response_class=JSONResponse)
-async def get_all_medications():
-    try:
-        result = db.execute(f'''SELECT medications_id,
-                                    medications_generic_name,
-                                    medications_brand_name
-                                FROM medications;''')
+async def get_medications(medication_id: str):
+    if medication_id == 'all':
+        try:
+            result = db.execute(f'''SELECT medications_id,
+                                        medications_generic_name,
+                                        medications_brand_names
+                                    FROM medications;''')
 
-        medications = list()
+            medications = list()
 
-        for row in result:
-            medications.append(dict(zip(['medication_id',
-                                         'medication_generic_name',
-                                         'medication_brand_name'], row)))
-
-        if len(medications) == 0:
-            raise MIAException(MIASystem.API,
-                               MIASeverity.WARNING,
-                               'Query did not return any results')
-        else:
-            return {'medications': medications}
-
-    except MIAException as error:
-        return RedirectResponse(f'/errors?error_message={error}')
-
-@app.get('/medication', response_class=JSONResponse)
-async def get_medication(medication_id: str):
-    try:
-        result = db.execute(f'''SELECT medications_id,
-                                    medications_generic_name,
-                                    medications_brand_names,
-                                    medications_dosage_forms,
-                                    medications_side_effects,
-                                    medications_uses
-                                FROM medications
-                                WHERE medications_id = {medication_id};''')
-
-        medications = list()
-
-        for row in result:
-            medications.append(dict(zip(['medication_id',
+            for row in result:
+                medications.append(dict(zip(['medication_id',
                                             'medication_generic_name',
-                                            'medication_brand_names',
-                                            'medication_dosage_forms',
-                                            'medication_side_effects',
-                                            'medication_uses'], row)))
+                                            'medication_brand_names'], row)))
 
-        if len(medications) == 0:
-            raise MIAException(MIASystem.API,
-                               MIASeverity.WARNING,
-                               'Query did not return any results')
-        else:
-            return {'medication': medications}
+            if len(medications) == 0:
+                raise MIAException(MIASystem.API,
+                                MIASeverity.WARNING,
+                                'Query did not return any results')
+            else:
+                return {'medications': medications}
 
-    except MIAException as error:
-        return RedirectResponse(f'/errors?error_message={error}')
-        
+        except MIAException as error:
+            return RedirectResponse(f'/errors?error_message={error}')
+    else:
+        try:
+            result = db.execute(f'''SELECT medications_id,
+                                        medications_generic_name,
+                                        medications_brand_names,
+                                        medications_dosage_forms,
+                                        medications_side_effects,
+                                        medications_uses
+                                    FROM medications
+                                    WHERE medications_id = {medication_id};''')
+
+            medications = list()
+
+            for row in result:
+                medications.append(dict(zip(['medication_id',
+                                                'medication_generic_name',
+                                                'medication_brand_names',
+                                                'medication_dosage_forms',
+                                                'medication_side_effects',
+                                                'medication_uses'], row)))
+
+            if len(medications) == 0:
+                raise MIAException(MIASystem.API,
+                                MIASeverity.WARNING,
+                                'Query did not return any results')
+            else:
+                return {'medication': medications}
+
+        except MIAException as error:
+            return RedirectResponse(f'/errors?error_message={error}')
+
 ########################################################################################################################
 # Schedules Endpoint
 ########################################################################################################################
 
-# TODO: a join?
 @app.get('/schedules', response_class=JSONResponse)
 async def get_user_schedules(user_id: str):
     try:
@@ -169,6 +161,7 @@ async def get_user_schedules(user_id: str):
 
         for row in result:
             schedules.append(dict(zip(['schedule_id',
+                                       'user_id'
                                        'medication_id',
                                        'medication_generic_name',
                                        'medication_brand_name',
