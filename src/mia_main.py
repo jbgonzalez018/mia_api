@@ -112,7 +112,38 @@ async def get_all_medications():
     except MIAException as error:
         return RedirectResponse(f'/errors?error_message={error}')
 
+@app.get('/medication', response_class=JSONResponse)
+async def get_medication(medication_id: str):
+    try:
+        result = db.execute(f'''SELECT medications_id,
+                                    medications_generic_name,
+                                    medications_brand_names,
+                                    medications_dosage_forms,
+                                    medications_side_effects,
+                                    medications_uses
+                                FROM medications
+                                WHERE medications_id = {medication_id};''')
 
+        medications = list()
+
+        for row in result:
+            medications.append(dict(zip(['medication_id',
+                                            'medication_generic_name',
+                                            'medication_brand_names',
+                                            'medication_dosage_forms',
+                                            'medication_side_effects',
+                                            'medication_uses'], row)))
+
+        if len(medications) == 0:
+            raise MIAException(MIASystem.API,
+                               MIASeverity.WARNING,
+                               'Query did not return any results')
+        else:
+            return {'medication': medications}
+
+    except MIAException as error:
+        return RedirectResponse(f'/errors?error_message={error}')
+        
 ########################################################################################################################
 # Schedules Endpoint
 ########################################################################################################################
